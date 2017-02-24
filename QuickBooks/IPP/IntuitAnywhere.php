@@ -14,7 +14,7 @@
  * 
  * @package QuickBooks
  */
-
+use App\QuickBooks as QB;
 class QuickBooks_IPP_IntuitAnywhere 
 {
 	protected $_this_url;
@@ -357,17 +357,17 @@ class QuickBooks_IPP_IntuitAnywhere
 	 *
 	 * 
 	 */
-	public function handle($app_username, $app_tenant)
+	public function handle($qb_id,$app_username, $app_tenant)
 	{
-		if ($this->check($app_username, $app_tenant) and 		// We have tokens ...
-			$this->test($app_username, $app_tenant))			// ... and they are valid
-		{
-			// They are already logged in, send them on to exchange data
-			header('Location: ' . $this->_that_url);
-			exit;
-		}
-		else
-		{
+//		if ($this->check($app_username, $app_tenant) and 		// We have tokens ...
+//			$this->test($app_username, $app_tenant))			// ... and they are valid
+//		{
+//			// They are already logged in, send them on to exchange data
+//			header('Location: ' . $this->_that_url);
+//			exit;
+//		}
+//		else
+//		{
 			if (isset($_GET['oauth_token']))
 			{
 				// We're in the middle of an OAuth token session
@@ -407,7 +407,15 @@ class QuickBooks_IPP_IntuitAnywhere
 							WHERE
 								quickbooks_oauth_id = " . $arr['quickbooks_oauth_id']);
 						*/
-						
+
+						$qb = QB::find($qb_id);
+
+						$qb->oauth_request_token = $arr['oauth_request_token'];
+						$qb->oauth_request_token_secret = $arr['oauth_request_token_secret'];
+						$qb->oauth_access_token = $info['oauth_token'];
+						$qb->oauth_access_token_secret = $info['oauth_token_secret'];
+						$qb->save();
+
 						$this->_driver->oauthAccessWrite(
 							$this->_key, 
 							$arr['oauth_request_token'], 
@@ -443,7 +451,7 @@ class QuickBooks_IPP_IntuitAnywhere
 				header('Location: ' . $auth_url);
 				exit;
 			}
-		}
+	//	}
 		
 		return true;
 	}
@@ -577,8 +585,8 @@ class QuickBooks_IPP_IntuitAnywhere
 		//$HTTP->returnHeaders(true);
 		
 		// Send the request
-		$return = $HTTP->GET();
-		
+		//$return = $HTTP->GET();
+		$return = file_get_contents($HTTP->getURL());
 		$errnum = $HTTP->errorNumber();
 		$errmsg = $HTTP->errorMessage();
 
